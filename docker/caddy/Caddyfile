@@ -1,0 +1,23 @@
+{$SITE_ADDRESS:localhost} {
+	root * /var/www/html
+	encode gzip
+
+	# 50M upload limit for camera images/audio
+	request_body {
+		max_size 50MB
+	}
+
+	# Block access to dotfiles and .log files
+	@dotfiles path /.*
+	respond @dotfiles 403
+
+	@logfiles path *.log
+	respond @logfiles 403
+
+	# PHP via FastCGI
+	php_fastcgi php:9000 {
+		env AGE_SERVICE_URL http://age-service:3535
+	}
+
+	file_server
+}

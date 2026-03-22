@@ -30,6 +30,7 @@
 - Access Location [SMARTPHONES]
 - Access Webcam
 - Access Microphone
+- Age Detection from captured camera images (via DeepFace)
 
 <br>
 
@@ -79,6 +80,7 @@
 - macOS Big Sur / M1
 - Termux (android)
 - Personal host (direct admin and cPanel)
+- Docker (any platform)
   <br>
 
 ### Installation On Kali Linux
@@ -90,6 +92,30 @@ sudo bash install.sh
 sudo python3 -m pip install -r requirements.txt
 sudo python3 st.py
 ```
+
+<br>
+
+### Docker Deployment
+
+Run Storm-Breaker with Docker Compose using Caddy (automatic HTTPS):
+
+```bash
+git clone https://github.com/ultrasecurity/Storm-Breaker
+cd Storm-Breaker
+./docker-start.sh
+```
+
+This starts a 3-service stack: **Caddy** (reverse proxy + auto-TLS), **PHP-FPM**, and **age-service** (DeepFace age detection).
+
+**For HTTPS with a custom domain**, edit `.env`:
+```
+DOMAIN=yourdomain.com
+EMAIL=you@example.com
+```
+Then run `./docker-start.sh` — Caddy automatically provisions a Let's Encrypt certificate.
+
+**To stop:** `docker compose down`
+**To view logs:** `docker compose logs -f`
 
 <br>
 

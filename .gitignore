@@ -3,4 +3,8 @@
 ngrok.zip
 ngrok.tgz
 ngrok
-module/__pycache__/
+**/__pycache__/
+.env
+certbot/
+caddy_data/
+caddy_config/

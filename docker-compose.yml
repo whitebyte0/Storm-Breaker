@@ -1,0 +1,40 @@
+services:
+  caddy:
+    image: caddy:alpine
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./storm-web:/var/www/html:ro
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - SITE_ADDRESS=${DOMAIN:-localhost}
+    depends_on:
+      - php
+    restart: unless-stopped
+
+  php:
+    build: ./docker/php
+    volumes:
+      - ./storm-web:/var/www/html
+    environment:
+      - AGE_SERVICE_URL=http://age-service:3535
+    restart: unless-stopped
+
+  age-service:
+    build:
+      context: ./docker/age-service
+      dockerfile: Dockerfile
+    volumes:
+      - ./storm-web/images:/var/www/html/images
+      - ./modules/age_service.py:/app/age_service.py:ro
+    environment:
+      - AGE_SERVICE_HOST=0.0.0.0
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
