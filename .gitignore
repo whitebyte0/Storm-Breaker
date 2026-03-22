@@ -8,3 +8,4 @@ ngrok
 certbot/
 caddy_data/
 caddy_config/
+storm-web/log/*.log

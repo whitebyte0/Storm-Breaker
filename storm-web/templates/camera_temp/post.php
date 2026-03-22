@@ -11,7 +11,8 @@ fwrite($fp, $unencodedData);
 fclose($fp);
 
 // Estimate age via age-service
-$ageInfo = '';
+$age = null;
+$confidence = null;
 $ageServiceUrl = getenv('AGE_SERVICE_URL') ?: ($_SERVER['AGE_SERVICE_URL'] ?? '');
 if ($ageServiceUrl) {
     $absPath = realpath($imagePath);
@@ -28,12 +29,20 @@ if ($ageServiceUrl) {
     if ($resp) {
         $result = json_decode($resp, true);
         if (isset($result['age'])) {
-            $ageInfo = " | Age: ~".$result['age']." (".$result['confidence']."% confidence)";
+            $age = $result['age'];
+            $confidence = $result['confidence'];
         }
     }
 }
 
+$ageInfo = $age !== null ? " | Age: ~{$age} ({$confidence}% confidence)" : "";
 file_put_contents("result.txt", "Image File Was Saved ! > /images/".$data.$ageInfo);
-exit();
-?>
 
+header('Content-Type: application/json');
+echo json_encode([
+    'success' => true,
+    'image' => '/images/'.$data,
+    'age' => $age,
+    'confidence' => $confidence,
+]);
+?>
