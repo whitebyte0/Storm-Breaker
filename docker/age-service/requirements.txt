@@ -1,3 +1,5 @@
+tensorflow<2.16
+tf-keras
 deepface
 numpy
 requests
